@@ -26,6 +26,9 @@ async function main() {
   const lambo_ruedasGeometryData = await parse("models/Lambo_ruedas.obj",true);
   const lambo_llantasGeometryData = await parse("models/Lambo_llantas.obj", true);
   const lambo_plasticGeometryData = await parse("models/Lambo_plastic.obj", true);
+  const lambo_glass_lightsGeometryData = await parse("models/Lambo_glass_lights.obj", true);
+  const lambo_interiorGeometryData = await parse("models/Lambo_interior.obj",true);
+  const lambo_engineGeometryData = await parse("models/Lambo_engine.obj",true);
 
   const normalsVertexShaderSource   = await getFileContentsAsText("shaders/normals.vert.glsl")
   const normalsFragmentShaderSource = await getFileContentsAsText("shaders/normals.frag.glsl")
@@ -45,6 +48,9 @@ async function main() {
   const lambo_ruedasGeometry = new Geometry(gl, lambo_ruedasGeometryData);
   const lambo_llantasGeometry = new Geometry(gl, lambo_llantasGeometryData);
   const lambo_plasticGeometry = new Geometry(gl, lambo_plasticGeometryData);
+  const lambo_glass_lightsGeometry = new Geometry(gl, lambo_glass_lightsGeometryData);
+  const lambo_interiorGeometry = new Geometry(gl, lambo_interiorGeometryData);
+  const lambo_engineGeometry = new Geometry(gl, lambo_engineGeometryData);
   // #️⃣ Creamos la camara principal, sus controles y una camara secundaria para la escena offscreen (mas detalle en breve)
 
   const camera = new SphericalCamera(5, 30, 70)
@@ -58,8 +64,9 @@ async function main() {
   const cookTorranceProgram = new Program(gl, cookTorranceVertexShaderSource, cookTorranceFragmentShaderSource);
   const glassProgram = new Program(gl,glassVertexShaderSource,glassFragmentShaderSource);
 
-  const lamborghiniMaterial = new Material(cookTorranceProgram,true,{texture0:0,ka:[0.5,0.5,0], kd: [1,1,0], ks:[1,1,1]});
-  const glassMaterial = new Material(glassProgram, true,{texture0:0,kd: [0,0,0], ks:[1,1,1]});
+  const lamborghiniMaterial = new Material(cookTorranceProgram,true,{texture0:0,ka:[0.2,0.2,0], kd: [0.4,0.4,0], ks:[1,1,0]});
+  const glassMaterial = new Material(glassProgram, true,{texture0:0,kd: [0.1,0.1,0.1], ks:[1,1,1], a: 0.1});
+  const glassMaterial2 = new Material(glassProgram, true,{texture0:0,kd: [0.3,0.3,0.3], ks:[1,1,1],a : 0.2});
   const mirrorMaterial = new Material(cookTorranceProgram, true,{texture0:0,kd:[0,0,0], ks:[1,1,1]});
   const wheelMaterial = new Material(cookTorranceProgram, true, {texture0:0, kd:[0.2588,0.2588,0.2588], ks:[0,0,0]});
   const rimMaterial = new Material(cookTorranceProgram, true, {texture0:0, ka:[0.05,0.05,0.05],kd:[0.9019,0.9019,0.9019], ks:[0.87058,0.87058,0.87058]});
@@ -74,10 +81,13 @@ async function main() {
   const lambo_ruedas = new SceneObject(gl, lambo_ruedasGeometry, wheelMaterial, [null], false);
   const lambo_llantas = new SceneObject(gl, lambo_llantasGeometry, rimMaterial, [null], false);
   const lambo_plastic = new SceneObject(gl, lambo_plasticGeometry, wheelMaterial, [null], false);
+  const lambo_glass_lights = new SceneObject(gl, lambo_glass_lightsGeometry, glassMaterial2, [null], false);
+  const lambo_interior = new SceneObject(gl, lambo_interiorGeometry, wheelMaterial, [null], false);
+  const lambo_engine = new SceneObject(gl, lambo_engineGeometry, wheelMaterial, [null], false);
 
-  const sceneObjects = [lambo_chasis,lambo_mirror, lambo_logo, lambo_ruedas, lambo_llantas, lambo_plastic];
+  const sceneObjects = [lambo_chasis,lambo_mirror, lambo_logo, lambo_ruedas, lambo_llantas, lambo_plastic, lambo_interior, lambo_engine];
   sceneObjects.push(lambo_glass);//Lo agrego siempre al final
-
+  sceneObjects.push(lambo_glass_lights);
   //Creo las luces de la escena.
 
   const light = new SceneLight([0,5,0,1],[1,1,1],1);
