@@ -25,8 +25,8 @@ async function main() {
   const textureFragmentShaderSource = await getFileContentsAsText("shaders/texture.frag.glsl")
   const cookTorranceVertexShaderSource = await getFileContentsAsText("shaders/cookTorrance.vert.glsl");
   const cookTorranceFragmentShaderSource = await getFileContentsAsText("shaders/cookTorrance.frag.glsl");
-  const ghostVertexShaderSource = await getFileContentsAsText("shaders/ghost.vs.glsl");
-  const ghostFragmentShaderSource = await getFileContentsAsText("shaders/ghost.fs.glsl");
+  const glassVertexShaderSource = await getFileContentsAsText("shaders/glass.vs.glsl");
+  const glassFragmentShaderSource = await getFileContentsAsText("shaders/glass.fs.glsl");
 
   const lamborghiniGeometry = new Geometry(gl, lamborghiniGeometryData);
   const cubeGeometry = new Geometry(gl,cubeGeometryData);
@@ -44,10 +44,10 @@ async function main() {
   const normalsProgram = new Program(gl, normalsVertexShaderSource, normalsFragmentShaderSource)
   const textureProgram = new Program(gl, textureVertexShaderSource, textureFragmentShaderSource)
   const cookTorranceProgram = new Program(gl, cookTorranceVertexShaderSource, cookTorranceFragmentShaderSource);
-  const ghostProgram = new Program(gl,ghostVertexShaderSource,ghostFragmentShaderSource);
+  const glassProgram = new Program(gl,glassVertexShaderSource,glassFragmentShaderSource);
 
   const lamborghiniMaterial = new Material(cookTorranceProgram,true,{kd: [0,1,0], ks:[1,1,1]});
-  const glassMaterial = new Material(ghostProgram, true,{kd: [0,0,0], ks:[1,1,1]});
+  const glassMaterial = new Material(glassProgram, true,{kd: [0,0,0], ks:[1,1,1]});
 
   // #️⃣ Descripcion de objetos en escena: inicializamos sus matrices, almacenamos su geometria en buffers, etc
 
