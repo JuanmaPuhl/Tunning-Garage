@@ -1,5 +1,5 @@
 import { mat4,vec4 } from "/libs/gl-matrix/index.js"
-import { getFileContentsAsText, toRadians } from "/libs/utils.js"
+import { getFileContentsAsText, toRadians , loadImage} from "/libs/utils.js"
 import { Program, VertexBuffer, IndexBuffer, VertexArray, SphericalCamera, SphericalCameraMouseControls, Material,SceneObject,Geometry ,SceneLight} from "/libs/gl-engine/index.js"
 import { parse } from "/libs/gl-engine/parsers/obj-parser.js"
 
@@ -13,11 +13,19 @@ async function main() {
 
   // #️⃣ Cargamos assets a usar (modelos, codigo de shaders, etc)
 
+  const lambo_logoTexture = gl.createTexture();
+  armarTextura(lambo_logoTexture, await loadImage("/textures/logo_lamborghini.jpeg"));
+
+
   const lamborghiniGeometryData = await parse("models/lambo.obj", true)
   const cubeGeometryData   = await parse("models/cube.obj", false)
   const lambo_glassGeometryData = await parse("models/Lambo_glass.obj",true);
   const lambo_chasisGeometryData = await parse("models/Lambo_chasis.obj", true);
-
+  const lambo_mirrorGeometryData = await parse("models/Lambo_mirror.obj", true);
+  const lambo_logoGeometryData = await parse("models/Lambo_logo.obj",true);
+  const lambo_ruedasGeometryData = await parse("models/Lambo_ruedas.obj",true);
+  const lambo_llantasGeometryData = await parse("models/Lambo_llantas.obj", true);
+  const lambo_plasticGeometryData = await parse("models/Lambo_plastic.obj", true);
 
   const normalsVertexShaderSource   = await getFileContentsAsText("shaders/normals.vert.glsl")
   const normalsFragmentShaderSource = await getFileContentsAsText("shaders/normals.frag.glsl")
@@ -32,7 +40,11 @@ async function main() {
   const cubeGeometry = new Geometry(gl,cubeGeometryData);
   const lambo_glassGeometry = new Geometry(gl, lambo_glassGeometryData);
   const lambo_chasisGeometry = new Geometry(gl, lambo_chasisGeometryData);
-
+  const lambo_mirrorGeometry = new Geometry(gl,lambo_mirrorGeometryData);
+  const lambo_logoGeometry = new Geometry(gl, lambo_logoGeometryData);
+  const lambo_ruedasGeometry = new Geometry(gl, lambo_ruedasGeometryData);
+  const lambo_llantasGeometry = new Geometry(gl, lambo_llantasGeometryData);
+  const lambo_plasticGeometry = new Geometry(gl, lambo_plasticGeometryData);
   // #️⃣ Creamos la camara principal, sus controles y una camara secundaria para la escena offscreen (mas detalle en breve)
 
   const camera = new SphericalCamera(5, 30, 70)
@@ -46,16 +58,25 @@ async function main() {
   const cookTorranceProgram = new Program(gl, cookTorranceVertexShaderSource, cookTorranceFragmentShaderSource);
   const glassProgram = new Program(gl,glassVertexShaderSource,glassFragmentShaderSource);
 
-  const lamborghiniMaterial = new Material(cookTorranceProgram,true,{kd: [0,1,0], ks:[1,1,1]});
-  const glassMaterial = new Material(glassProgram, true,{kd: [0,0,0], ks:[1,1,1]});
-
+  const lamborghiniMaterial = new Material(cookTorranceProgram,true,{texture0:0,ka:[0.5,0.5,0], kd: [1,1,0], ks:[1,1,1]});
+  const glassMaterial = new Material(glassProgram, true,{texture0:0,kd: [0,0,0], ks:[1,1,1]});
+  const mirrorMaterial = new Material(cookTorranceProgram, true,{texture0:0,kd:[0,0,0], ks:[1,1,1]});
+  const wheelMaterial = new Material(cookTorranceProgram, true, {texture0:0, kd:[0.2588,0.2588,0.2588], ks:[0,0,0]});
+  const rimMaterial = new Material(cookTorranceProgram, true, {texture0:0, ka:[0.05,0.05,0.05],kd:[0.9019,0.9019,0.9019], ks:[0.87058,0.87058,0.87058]});
   // #️⃣ Descripcion de objetos en escena: inicializamos sus matrices, almacenamos su geometria en buffers, etc
 
-  const lamborghini = new SceneObject(gl, lamborghiniGeometry,lamborghiniMaterial, false);
-  const cube = new SceneObject(gl, cubeGeometry, lamborghiniMaterial,false);
-  const lambo_glass = new SceneObject(gl, lambo_glassGeometry, glassMaterial, false);
-  const lambo_chasis = new SceneObject(gl, lambo_chasisGeometry, lamborghiniMaterial, false);
-  const sceneObjects = [lambo_chasis,lambo_glass];
+  const lamborghini = new SceneObject(gl, lamborghiniGeometry,lamborghiniMaterial, [null],false);
+  const cube = new SceneObject(gl, cubeGeometry, lamborghiniMaterial,[null],false);
+  const lambo_glass = new SceneObject(gl, lambo_glassGeometry, glassMaterial,[null], false);
+  const lambo_chasis = new SceneObject(gl, lambo_chasisGeometry, lamborghiniMaterial,[null], false);
+  const lambo_mirror = new SceneObject(gl, lambo_mirrorGeometry, mirrorMaterial,[null], false);
+  const lambo_logo = new SceneObject(gl, lambo_logoGeometry, mirrorMaterial, [lambo_logoTexture],false);
+  const lambo_ruedas = new SceneObject(gl, lambo_ruedasGeometry, wheelMaterial, [null], false);
+  const lambo_llantas = new SceneObject(gl, lambo_llantasGeometry, rimMaterial, [null], false);
+  const lambo_plastic = new SceneObject(gl, lambo_plasticGeometry, wheelMaterial, [null], false);
+
+  const sceneObjects = [lambo_chasis,lambo_mirror, lambo_logo, lambo_ruedas, lambo_llantas, lambo_plastic];
+  sceneObjects.push(lambo_glass);//Lo agrego siempre al final
 
   //Creo las luces de la escena.
 
@@ -128,8 +149,13 @@ async function main() {
         }
 
         // Seteamos unidad de textura activa, junto con su target (TEXTURE_2D) y la textura a usar (donde tenemos la escena renderizada)
-        gl.activeTexture(gl.TEXTURE0)
-        gl.bindTexture(gl.TEXTURE_2D, null)
+        let j=0;
+        for(let texture of object.textures){
+          gl.activeTexture(gl.TEXTURE0 + j)
+          gl.bindTexture(gl.TEXTURE_2D, texture);
+          j++;
+        }
+
 
         // Seteamos info de geometria a usar
         object.vertexArray.bind()
@@ -139,6 +165,19 @@ async function main() {
       }
 
   }
+
+  function armarTextura(texture, image) {
+
+		gl.bindTexture(gl.TEXTURE_2D, texture);
+		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+		gl.generateMipmap(gl.TEXTURE_2D);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+		gl.bindTexture(gl.TEXTURE_2D, null);
+	}
 }
 
 function updateView(gl, canvas, camera, forceUpdate = false) {
