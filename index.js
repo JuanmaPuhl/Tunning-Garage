@@ -43,6 +43,8 @@ async function main() {
   console.log("Interior Cargado");
   const lambo_engineGeometryData = await parse("models/Lambo_engine.obj",true);
   console.log("Motor Cargado");
+  const lambo_wordGeometryData = await parse("models/Lambo_word.obj", true);
+  const lambo_exhaustGeometryData = await parse("models/Lambo_exhaust.obj", true);
 
   const normalsVertexShaderSource   = await getFileContentsAsText("shaders/normals.vert.glsl")
   const normalsFragmentShaderSource = await getFileContentsAsText("shaders/normals.frag.glsl")
@@ -69,6 +71,8 @@ async function main() {
   const lambo_glass_lightsGeometry = new Geometry(gl, lambo_glass_lightsGeometryData);
   const lambo_interiorGeometry = new Geometry(gl, lambo_interiorGeometryData);
   const lambo_engineGeometry = new Geometry(gl, lambo_engineGeometryData);
+  const lambo_wordGeometry = new Geometry(gl, lambo_wordGeometryData);
+  const lambo_exhaustGeometry = new Geometry(gl, lambo_exhaustGeometryData);
   // #️⃣ Creamos la camara principal, sus controles y una camara secundaria para la escena offscreen (mas detalle en breve)
 
   const camera = new SphericalCamera(5, 30, 70)
@@ -114,8 +118,10 @@ async function main() {
   const lambo_glass_lights = new SceneObject(gl, lambo_glass_lightsGeometry, glassMaterial2, [null], false);
   const lambo_interior = new SceneObject(gl, lambo_interiorGeometry, wheelMaterial, [null], false);
   const lambo_engine = new SceneObject(gl, lambo_engineGeometry, wheelMaterial, [lambo_engineTexture], false);
+  const lambo_word = new SceneObject(gl, lambo_wordGeometry, rimMaterial, [null], false);
+  const lambo_exhaust = new SceneObject(gl, lambo_exhaustGeometry, rimMaterial, [null], false);
 
-  const sceneObjects = [cube,lambo_chasis,lambo_mirror, lambo_logo, lambo_ruedas, lambo_llantas, lambo_plastic, lambo_interior, lambo_engine];
+  const sceneObjects = [cube,lambo_chasis,lambo_mirror, lambo_logo, lambo_ruedas, lambo_llantas, lambo_plastic, lambo_interior, lambo_engine, lambo_word, lambo_exhaust];
   sceneObjects.push(lambo_glass);//Lo agrego siempre al final
   sceneObjects.push(lambo_glass_lights);
 
