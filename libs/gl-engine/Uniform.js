@@ -13,6 +13,8 @@ export class Uniform {
 
     getValueSetter(gl, type, location) {
         switch (type) {
+            case (gl.SAMPLER_CUBE):
+                return (value) => { gl.uniform1i(location, value) }
             case (gl.SAMPLER_2D):
                 return (value) => { gl.uniform1i(location, value) }
             case (gl.FLOAT):

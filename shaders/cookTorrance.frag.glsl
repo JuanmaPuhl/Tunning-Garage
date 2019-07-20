@@ -95,9 +95,9 @@ vec3 calcularAportePuntual(Light l, vec3 N , vec3 V){
   float value = orenNayar(N,V,L,H);
 
   if(componente1*componente2!=0.0)
-    return ka+ia*(coefDifuso*value + ks*(Fres/3.141516)* (Beckmann*GCT)/(componente1*componente2));
+    return ka*coefDifuso+ia*(coefDifuso*value + ks*(Fres/3.141516)* (Beckmann*GCT)/(componente1*componente2));
   else
-     return ka+ia*coefDifuso*value;
+     return ka*coefDifuso+ia*coefDifuso*value;
 }
 
 vec3 calcularAporteSpot(Light l, vec3 N, vec3 V){
@@ -143,9 +143,9 @@ vec3 calcularAporteSpot(Light l, vec3 N, vec3 V){
 
     float value = orenNayar(N,V,L,H);
     if(componente1*componente2!=0.0)
-      toReturn = ka+ia*(inlight * coefDifuso*value + inlight * ks*(Fres/3.141516)* (Beckmann*GCT)/(componente1*componente2));
+      toReturn = ka*coefDifuso*0.25+ia*(inlight * coefDifuso*value + inlight * ks*(Fres/3.141516)* (Beckmann*GCT)/(componente1*componente2));
     else
-       toReturn = ka+ia*inlight*coefDifuso * value;
+       toReturn = ka*coefDifuso*0.25+ia*inlight*coefDifuso * value;
     return toReturn;
 }
 
@@ -199,7 +199,7 @@ vec3 calcularAporteDireccional(Light l, vec3 N , vec3 V){
 void main(){
     coefDifuso = mix(vec3(texture(imagen,fTexCoor)+texture(imagen2,fTexCoor))*0.5,vec3(texture(imagen3,fTexCoor)),0.5);
     coefSpecular = vec3(texture(imagen2,fTexCoor));
-    coefDifuso += kd;
+    coefDifuso = kd;
     vec3 N = vec3(0.0);
     sampledNormal = vec3(texture(normalsTexture, fTexCoor));
     if(normalMapping == 1.0){
@@ -211,6 +211,7 @@ void main(){
     //vec3 N = normalize(vNE);
     vec3 V = normalize(vVE);
     colorFrag = vec4(0.0);
+    int cant = lights.length();
     for(int i = 0; i<cantLights; i++){
       if(lights[i].type==0)
        colorFrag += vec4(calcularAporteSpot(lights[i],N,V),1.0);
