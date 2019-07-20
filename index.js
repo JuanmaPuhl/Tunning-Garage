@@ -85,7 +85,7 @@ async function main() {
   const sProgram = new Program(gl, sVertexShaderSource,sFragmentShaderSource);
 
   const floorMaterial = new Material(sProgram, true,true, {texture0:1,texture2:2,normalsTexture: 3, ka:[0.2,0.2,0.2], kd:[0.85446,0.85446,0.85446],ks:[0.0,0.0,0.0],F0:2.81, rugosidad:0.3, sigma:90, p:1});
-  const lamborghiniMaterial = new Material(sProgram,true,true,{texture0:1,texture2:2,normalsTexture: 3,ka:[0.2,0.2,0], kd: [0.4,0.4,0], ks:[1,1,0], F0: 0.13, rugosidad: 0.3, sigma: 90, p:1});
+  const lamborghiniMaterial = new Material(sProgram,true,true,{texture0:1,texture2:2,normalsTexture: 3,ka:[0.05,0.15,0.005], kd: [0.1607,0.5294,0.04705], ks:[0,0.7,0], F0: 0.13, rugosidad: 0.3, sigma: 90, p:1});
   const glassMaterial = new Material(glassProgram, true,false,{texture0:0,kd: [0.1,0.1,0.1], ks:[1,1,1], a: 0.1});
   const glassMaterial2 = new Material(glassProgram, true,false,{texture0:0,kd: [0.1,0.1,0.1], ks:[1,1,1],a : 0.1});
   const mirrorMaterial = new Material(sProgram, true,true,{texture0:1,texture2:2,normalsTexture: 3,ka:[0,0,0],kd:[0,0,0], ks:[1,1,1], F0: 0.1, rugosidad: 0.09, sigma:90, p:1});
@@ -137,42 +137,20 @@ async function main() {
   /*FUNCIONAMIENTO SOMBRAS GLOBALES CON CUBEMAPS
 
   La idea general del shadowmapping es poner una camara en la posicion de
-// set the filtering so we don't need mips
   la luz y guardar los valores de profundidad en una textura, que despues
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
   sera usada al renderizar la escena.
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
   El problema aparece con las luces puntuales. ¿A donde apuntamos la camara?
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   Con cubemaps se arregla. Hacemos que la camara apunte en 6 direcciones
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   distintas, una a la vez. Y en cada direccion genera una textura.
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE);
   Luego, en el ciclo de renderizado normal, se obtiene el valor de la textura
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_FUNC, gl.LEQUAL);
   del cubemap para cada vertice y se decide si se dibuja o no.
 */
 
-//Creo el cubemap
-var shadowMapCube = gl.createTexture();
-gl.bindTexture(gl.TEXTURE_CUBE_MAP,shadowMapCube);
-gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.MIRRORED_REPEAT);
-gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT);
-for(let i=0; i<6; i++){
-  gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + i,0,gl.RGBA,SHADOW_MAP_SIZE,SHADOW_MAP_SIZE,0,gl.RGBA,gl.UNSIGNED_BYTE,null);
-}
-
-//Creo los framebuffer que almacenan la textura.
-   var shadowMapFrameBuffer = gl.createFramebuffer();
-   gl.bindFramebuffer(gl.FRAMEBUFFER,shadowMapFrameBuffer);
-   var shadowMapRenderBuffer = gl.createRenderbuffer();
-   gl.bindRenderbuffer(gl.RENDERBUFFER,shadowMapRenderBuffer);
-   gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_COMPONENT16,SHADOW_MAP_SIZE,SHADOW_MAP_SIZE);
-   gl.bindTexture(gl.TEXTURE_CUBE_MAP,null);
-   gl.bindRenderbuffer(gl.RENDERBUFFER,null);
-   gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+    //Creo el cubemap
+    var shadowMapCube = gl.createTexture();
+    var shadowMapFrameBuffer;
+    var shadowMapRenderBuffer;
+    setTextureConfig();
    //Creo los arreglos con direcciones para cada cara del cubemap
      //Direcciones Target
      var ENV_CUBE_LOOK_DIR = [
@@ -221,10 +199,10 @@ var last =0;
 
       //console.log(fps);            // compute frames per second
       // 2️⃣ Dibujamos la escena con el cubo usando el Frame Buffer por defecto (asociado al canvas)
-//  drawSceneAsUsual()
-drawShadowMap();
-      // Solicitamos el proximo frame
-      requestAnimationFrame(render)
+    //drawSceneAsUsual()
+    drawShadowMap();
+    // Solicitamos el proximo frame
+    requestAnimationFrame(render)
   }
 
 
@@ -342,7 +320,6 @@ drawShadowMap();
 
 
   function armarTextura(texture, image) {
-
 		gl.bindTexture(gl.TEXTURE_2D, texture);
 		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
