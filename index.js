@@ -10,12 +10,15 @@ async function main() {
   const gl = canvas.getContext("webgl2")
   gl.enable(gl.DEPTH_TEST)
   gl.enable(gl.CULL_FACE)
-
+  gl.clearColor(0.05, 0.05, 0.05, 1)
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
   // #️⃣ Cargamos assets a usar (modelos, codigo de shaders, etc)
 
   const lambo_logoTexture = gl.createTexture();
-  armarTextura(lambo_logoTexture, await loadImage("/textures/logo_lamborghini.jpeg"));
+  const lambo_engineTexture = gl.createTexture();
 
+  armarTextura(lambo_logoTexture, await loadImage("/textures/logo_lamborghini.jpeg"));
+  armarTextura(lambo_engineTexture, await loadImage("/textures/lp700_motor.jpeg"));
 
   const lamborghiniGeometryData = await parse("models/lambo.obj", true)
   const cubeGeometryData   = await parse("models/cube.obj", false)
@@ -64,16 +67,18 @@ async function main() {
   const cookTorranceProgram = new Program(gl, cookTorranceVertexShaderSource, cookTorranceFragmentShaderSource);
   const glassProgram = new Program(gl,glassVertexShaderSource,glassFragmentShaderSource);
 
-  const lamborghiniMaterial = new Material(cookTorranceProgram,true,{texture0:0,ka:[0.2,0.2,0], kd: [0.4,0.4,0], ks:[1,1,0]});
+  const floorMaterial = new Material(cookTorranceProgram, true, {texture:0, ka:[0,0,0], kd:[0.95446,0.078,0.0],ks:[0,0,0],F0:2.81, rugosidad:0.09, sigma:90, p:1});
+  const lamborghiniMaterial = new Material(cookTorranceProgram,true,{texture0:0,ka:[0.2,0.2,0], kd: [0.4,0.4,0], ks:[1,1,0], F0: 0.13, rugosidad: 0.3, sigma: 90, p:1});
   const glassMaterial = new Material(glassProgram, true,{texture0:0,kd: [0.1,0.1,0.1], ks:[1,1,1], a: 0.1});
-  const glassMaterial2 = new Material(glassProgram, true,{texture0:0,kd: [0.3,0.3,0.3], ks:[1,1,1],a : 0.2});
-  const mirrorMaterial = new Material(cookTorranceProgram, true,{texture0:0,kd:[0,0,0], ks:[1,1,1]});
-  const wheelMaterial = new Material(cookTorranceProgram, true, {texture0:0, kd:[0.2588,0.2588,0.2588], ks:[0,0,0]});
-  const rimMaterial = new Material(cookTorranceProgram, true, {texture0:0, ka:[0.05,0.05,0.05],kd:[0.9019,0.9019,0.9019], ks:[0.87058,0.87058,0.87058]});
+  const glassMaterial2 = new Material(glassProgram, true,{texture0:0,kd: [0.1,0.1,0.1], ks:[1,1,1],a : 0.1});
+  const mirrorMaterial = new Material(cookTorranceProgram, true,{texture0:0,kd:[0,0,0], ks:[1,1,1], F0: 0.1, rugosidad: 0.09, sigma:90, p:1});
+  const wheelMaterial = new Material(cookTorranceProgram, true, {texture0:0, kd:[0.2588,0.2588,0.2588], ks:[0,0,0], F0:0.09, rugosidad:0.1, sigma:90, p:1});
+  const rimMaterial = new Material(cookTorranceProgram, true, {texture0:0, ka:[0.05,0.05,0.05],kd:[0.6019,0.6019,0.6019], ks:[0.37058,0.37058,0.37058], F0: 0.13, rugosidad: 0.1, sigma: 90, p:1});
   // #️⃣ Descripcion de objetos en escena: inicializamos sus matrices, almacenamos su geometria en buffers, etc
 
+
   const lamborghini = new SceneObject(gl, lamborghiniGeometry,lamborghiniMaterial, [null],false);
-  const cube = new SceneObject(gl, cubeGeometry, lamborghiniMaterial,[null],false);
+  const cube = new SceneObject(gl, cubeGeometry, floorMaterial,[null],false);
   const lambo_glass = new SceneObject(gl, lambo_glassGeometry, glassMaterial,[null], false);
   const lambo_chasis = new SceneObject(gl, lambo_chasisGeometry, lamborghiniMaterial,[null], false);
   const lambo_mirror = new SceneObject(gl, lambo_mirrorGeometry, mirrorMaterial,[null], false);
@@ -83,23 +88,47 @@ async function main() {
   const lambo_plastic = new SceneObject(gl, lambo_plasticGeometry, wheelMaterial, [null], false);
   const lambo_glass_lights = new SceneObject(gl, lambo_glass_lightsGeometry, glassMaterial2, [null], false);
   const lambo_interior = new SceneObject(gl, lambo_interiorGeometry, wheelMaterial, [null], false);
-  const lambo_engine = new SceneObject(gl, lambo_engineGeometry, wheelMaterial, [null], false);
+  const lambo_engine = new SceneObject(gl, lambo_engineGeometry, wheelMaterial, [lambo_engineTexture], false);
 
-  const sceneObjects = [lambo_chasis,lambo_mirror, lambo_logo, lambo_ruedas, lambo_llantas, lambo_plastic, lambo_interior, lambo_engine];
+  const sceneObjects = [cube,lambo_chasis,lambo_mirror, lambo_logo, lambo_ruedas, lambo_llantas, lambo_plastic, lambo_interior, lambo_engine];
   sceneObjects.push(lambo_glass);//Lo agrego siempre al final
   sceneObjects.push(lambo_glass_lights);
-  //Creo las luces de la escena.
 
-  const light = new SceneLight([0,5,0,1],[1,1,1],1);
+  let sm= mat4.create();
+  let m = cube.modelMatrix;
+  mat4.fromScaling(sm,[50,0.5,50]);
+  mat4.multiply(m,sm,m);
+  sm = mat4.create();
+  mat4.fromTranslation(sm,[0,-0.48,0]);
+  mat4.multiply(m,sm,m);
+
+  //Creo las luces de la escena.
+  const light = new SceneLight([0,5,0,1],[1,1,1],Math.cos(toRadians(50)),[0,-1,0,0],0);
+  const light2 = new SceneLight([0,5,10,1],[0.8,0.1,0.1],Math.cos(toRadians(50)),[0,-1,0,0],1);
+  const light3 = new SceneLight([0,5,-10,1],[0.1,0.8,0.1],Math.cos(toRadians(50)),[0,-1,0,0],1);
   const sceneLights = [light];
 
   console.log(lamborghini.position);
 
   // 🎬 Iniciamos el render-loop
-
+var then=0;
+var count =0;
+var last =0;
   requestAnimationFrame(render)
 
-  function render() {
+  function render(now) {
+      now *= 0.001;                          // convert to seconds
+    	const deltaTime = now - then;          // compute time since last frame
+      count++;//Aumento fps
+      	if(now - last> 1){
+      		document.getElementById("FPS").innerText = count;
+          count = 0;
+      		last = now;
+      	}
+      	then = now; //Actualizo el valor
+
+
+      //console.log(fps);            // compute frames per second
       // 2️⃣ Dibujamos la escena con el cubo usando el Frame Buffer por defecto (asociado al canvas)
       drawSceneAsUsual()
 
@@ -148,9 +177,13 @@ async function main() {
           let i=0;
           for(let light of sceneLights){
             let lightPosEye = vec4.create();
+            let lightDirEye = vec4.create();
             vec4.transformMat4(lightPosEye, light.position, camera.viewMatrix);
+            vec4.transformMat4(lightDirEye, light.direction, camera.viewMatrix);
             programa.setUniformValue("lights["+i+"].posL", lightPosEye);
             programa.setUniformValue("lights["+i+"].ia", light.color);
+            programa.setUniformValue("lights["+i+"].dirL", lightDirEye);
+            programa.setUniformValue("lights["+i+"].limit", light.angle);
             programa.setUniformValue("lights["+i+"].type", light.type);
             i++;
           }

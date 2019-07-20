@@ -51,3 +51,13 @@ canvas:active {
 .control label {
     margin-right: 10px;
 }
+
+.info {
+    position: absolute;
+    margin: 10px;
+    left: 0px;
+    top: 0px;
+    color: rgb(180, 180, 180);
+    font-size: 15px;
+    font-family : Helvetica;
+}
