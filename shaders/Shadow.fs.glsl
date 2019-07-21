@@ -13,14 +13,18 @@ uniform struct Light{
   vec4 position;
   vec4 direction;
   vec3 color;
+  float limit;
   int type;
 }lights[10];
 uniform int cantLights;
+
+uniform sampler2D texture0;
 
 in vec3 fPos;
 in vec3 fNorm;
 in vec3 vNE;
 in vec3 vVE;
+in vec2 fTexCoor;
 out vec4 fragColor;
 
 uniform float F0;
@@ -28,7 +32,7 @@ uniform float rugosidad;
 uniform float p;
 uniform float sigma;
 vec3 coefDifuso;
-
+uniform vec3 b;
 
 float calcSombras(Light light,vec3 N, vec3 V){
   vec3 vLE = light.position.xyz + vVE;
@@ -102,38 +106,120 @@ vec3 calcularAportePuntual(Light l, vec3 N , vec3 V){
   float value = orenNayar(N,V,L,H);
 
   if(componente1*componente2!=0.0)
-    return ia*(coefDifuso*value + ks*(Fres/3.141516)* (Beckmann*GCT)/(componente1*componente2));
+    return b+ia*(coefDifuso*value + ks*(Fres/3.141516)* (Beckmann*GCT)/(componente1*componente2));
   else
-     return ia*coefDifuso*value;
+     return b+ia*coefDifuso*value;
 }
 
-// vec3 calcularAportePuntual(Light light, vec3 N, vec3 V){
-//   vec3 vLE = light.position.xyz + vVE;
-//   vec3 L = normalize(vLE);
-//   vec3 H = normalize(L + V);
-//   float LdotN = max(dot(L, N), 0.0);
-//   float HdotN = max(dot(H, N), 0.0);
-//   float dif		= LdotN;
-//
-//   float specPhong = 0.0;
-//   if (LdotN > 0.0) {
-//    specPhong = pow(HdotN, 100.0);
-//   }
-//   vec3 ambiente = ka*0.5;
-//   vec3 difuso = kd * dif;
-//   vec3 especular = vec3(1.0)*specPhong;
-//   vec3 toReturn = vec3(0.0);
-//   toReturn = light.color*(difuso + especular);
-//   return toReturn;
-// }
+vec3 calcularAporteSpot(Light l, vec3 N, vec3 V){
+  vec4 posL = l.position;
+  vec4 dirL = l.direction;
+  vec3 ia = l.color;
+  float limit = l.limit;
+  vec3 light_direction = vec3(posL + vec4(vVE,1.0)); //direccion de la luz al vertice
+  vec3 L = normalize(light_direction);
+  vec3 H = normalize(V+L);
+  vec3 S = normalize(vec3(dirL));
+  vec3 toReturn = ka;
+
+  float titaH = max(dot(N,H),0.0);
+  float titaI = max(dot(N,L),0.0);
+  //Variables de la atenuacion geometrica
+  float angle = acos(max(dot(S,-L),0.0));
+  float inlight = smoothstep(radians(degrees(acos(limit))+10.0),acos(limit),angle);
+    float Beckmann;
+    //Termino de Fresnel
+    float Fres = pow(1.0 - titaH, 5.0);
+    Fres *= (1.0 - F0);
+    Fres += F0;
+
+    //Termino de Beackmann
+    float divisor = pow(rugosidad,2.0)* pow(titaH,4.0);
+    float exponente = -(pow(tan(acos(titaH))/rugosidad,2.0));
+    exponente = exp(exponente);
+    Beckmann = exponente/divisor;
+
+    //Variables de la atenuacion geometrica
+    float GCT;
+    float Ge;
+    float Gs;
+    float titaV = max(dot(V,H),0.0);
+    Ge = (2.0*titaH*titaV)/(titaV);
+    Gs = (2.0*titaH*titaI)/(titaV);
+
+    GCT=min(1.0,Ge);
+    GCT=min(GCT,Gs);
+    float componente1 = max(dot(N,V),0.0);
+    float componente2 = max(dot(N,L),0.0);
+
+    float value = orenNayar(N,V,L,H);
+    if(componente1*componente2!=0.0)
+      toReturn = b+ia*(inlight * coefDifuso*value + inlight * ks*(Fres/3.141516)* (Beckmann*GCT)/(componente1*componente2));
+    else
+       toReturn = b+ia*inlight*coefDifuso * value;
+    return toReturn;
+}
+
+vec3 calcularAporteDireccional(Light l, vec3 N , vec3 V){
+  vec4 posL = l.position;
+  vec4 dirL = l.direction;
+  vec3 ia = l.color;
+  float limit = l.limit;
+  vec3 light_direction = vec3(posL + vec4(vVE,1.0)); //direccion de la luz al vertice
+  vec3 S = -normalize(vec3(dirL));
+  vec3 L = normalize(light_direction);
+  vec3 H = normalize(V+S);
+
+  float titaH = max(dot(N,H),0.0);
+  float titaI = max(dot(N,S),0.0);
+  //Variables de la atenuacion geometrica
+
+  float Beckmann;
+  //Termino de Fresnel
+  float Fres = pow(1.0 - titaH, 5.0);
+  Fres *= (1.0 - F0);
+  Fres += F0;
+
+  //Termino de Beackmann
+  float divisor = pow(rugosidad,2.0)* pow(titaH,4.0);
+  float exponente = -(pow(tan(acos(titaH))/rugosidad,2.0));
+  exponente = exp(exponente);
+  Beckmann = exponente/divisor;
+
+  //Variables de la atenuacion geometrica
+  float GCT;
+  float Ge;
+  float Gs;
+  float titaV = max(dot(V,H),0.0);
+  Ge = (2.0*titaH*titaV)/(titaV);
+  Gs = (2.0*titaH*titaI)/(titaV);
+
+  GCT=min(1.0,Ge);
+  GCT=min(GCT,Gs);
+  float componente1 = max(dot(N,V),0.0);
+  float componente2 = max(dot(N,S),0.0);
+
+  float value = orenNayar(N,V,S,H);
+  if(componente1*componente2!=0.0)
+    return b+ia*(coefDifuso*value + ks*(Fres/3.141516)* (Beckmann*GCT)/(componente1*componente2));
+  else
+     return b+ia*coefDifuso * value;
+}
 
 void main(){
   vec3 N = normalize(vNE);
   vec3 V = normalize(vVE);
-  coefDifuso = kd;
+  coefDifuso = kd + texture(texture0,fTexCoor).xyz  ;
   vec3 ret = calcularAportePuntual(lights[0],N,V);
-  vec3 col = ka*coefDifuso+calcSombras(lights[0],N,V)*ret;
-
+  vec3 col =calcSombras(lights[0],N,V)*ret;
+  for(int i = 1; i<cantLights; i++){
+    if(lights[i].type==0)
+     col += calcularAporteSpot(lights[i],N,V);
+    if(lights[i].type==1)
+      col += calcularAportePuntual(lights[i],N,V);
+    if(lights[i].type==2)
+     col += calcularAporteDireccional(lights[i],N,V);
+  }
   fragColor = vec4(col,1.0);
 
 }

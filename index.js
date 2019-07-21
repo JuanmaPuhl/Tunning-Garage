@@ -88,13 +88,14 @@ async function main() {
   const shadowProgram = new Program(gl,shadowVertexShaderSource,shadowFragmentShaderSource);
   const sProgram = new Program(gl, sVertexShaderSource,sFragmentShaderSource);
 
-  const floorMaterial = new Material(sProgram, true,true, {texture0:1,texture2:2,normalsTexture: 3, ka:[0.2,0.2,0.2], kd:[0.85446,0.85446,0.85446],ks:[0.0,0.0,0.0],F0:2.81, rugosidad:0.3, sigma:90, p:1});
-  const lamborghiniMaterial = new Material(sProgram,true,true,{texture0:1,texture2:2,normalsTexture: 3,ka:[0.05,0.15,0.005], kd: [0.1607,0.5294,0.04705], ks:[0,0.7,0], F0: 0.13, rugosidad: 0.3, sigma: 90, p:1});
-  const glassMaterial = new Material(glassProgram, true,false,{texture0:0,kd: [0.1,0.1,0.1], ks:[1,1,1], a: 0.1});
-  const glassMaterial2 = new Material(glassProgram, true,false,{texture0:0,kd: [0.1,0.1,0.1], ks:[1,1,1],a : 0.1});
-  const mirrorMaterial = new Material(sProgram, true,true,{texture0:1,texture2:2,normalsTexture: 3,ka:[0,0,0],kd:[0,0,0], ks:[1,1,1], F0: 0.1, rugosidad: 0.09, sigma:90, p:1});
-  const wheelMaterial = new Material(sProgram, true,true, {texture0:1,texture2:2,normalsTexture: 3, ka:[0,0,0],kd:[0.26,0.26,0.26], ks:[0,0,0], F0:0.09, rugosidad:0.1, sigma:90, p:1});
-  const rimMaterial = new Material(sProgram, true,true, {texture0:1,texture2:2, normalsTexture: 3,ka:[0.05,0.05,0.05],kd:[0.6019,0.6019,0.6019], ks:[0.37058,0.37058,0.37058], F0: 0.13, rugosidad: 0.1, sigma: 90, p:1});
+  const floorMaterial = new Material(sProgram, true,true, {texture0:1,texture2:2,normalsTexture: 3, ka:[0.2,0.2,0.2], kd:[1,1,1],ks:[0.0,0.0,0.0],F0:2.81, rugosidad:0.3, sigma:0.0, p:2,b:[0,0,0]});
+  const lamborghiniMaterial = new Material(sProgram,true,true,{texture0:1,texture2:2,normalsTexture: 3,ka:[0.05,0.15,0.005], kd: [0.1607,0.5294,0.04705], ks:[0.1,0.7,0.1], F0: 0.13, rugosidad: 0.3, sigma: 0.3, p:2,b:[0,0,0]});
+  const glassMaterial = new Material(glassProgram, true,false,{texture0:0,kd: [0.1,0.1,0.1], ks:[1,1,1], a: 0.01});
+  const glassMaterial2 = new Material(glassProgram, true,false,{texture0:0,kd: [0.1,0.1,0.1], ks:[1,1,1],a : 0.01});
+  const mirrorMaterial = new Material(sProgram, true,true,{texture0:1,texture2:2,normalsTexture: 3,ka:[0,0,0],kd:[0,0,0], ks:[1,1,1], F0: 0.1, rugosidad: 0.09, sigma:0, p:100,b:[0,0,0]});
+  const wheelMaterial = new Material(sProgram, true,true, {texture0:1,texture2:2,normalsTexture: 3, ka:[0,0,0],kd:[0.26,0.26,0.26], ks:[0,0,0], F0:0.09, rugosidad:0.1, sigma:90, p:0.2,b:[0,0,0]});
+  const rimMaterial = new Material(sProgram, true,true, {texture0:1,texture2:2, normalsTexture: 3,ka:[0.05,0.05,0.05],kd:[0.6019,0.6019,0.6019], ks:[0.37058,0.37058,0.37058], F0: 0.13, rugosidad: 0.1, sigma: 0, p:2,b:[0,0,0]});
+  const logoMaterial = new Material(sProgram, true, true, {texture0:1, texture2:2, normalsTexture: 3, ka:[0,0,0], kd:[0.6,0.6,0.6], ks:[0.0,0.0,0.0], F0:0.1, rugosidad: 0.09, sigma: 90, p:0.1,b:[0,0,0]});
 
   // const floorMaterial = new Material(cookTorranceProgram, true,true, {texture0:1,texture2:2,normalsTexture: 3, ka:[0.2,0.2,0.2], kd:[0.85446,0.85446,0.85446],ks:[0.0,0.0,0.0],F0:2.81, rugosidad:0.3, sigma:90, p:1});
   // const lamborghiniMaterial = new Material(cookTorranceProgram,true,true,{texture0:1,texture2:2,normalsTexture: 3,ka:[0.2,0.2,0], kd: [0.4,0.4,0], ks:[1,1,0], F0: 0.13, rugosidad: 0.3, sigma: 90, p:1});
@@ -111,7 +112,7 @@ async function main() {
   const lambo_glass = new SceneObject(gl, lambo_glassGeometry, glassMaterial,[null], false);
   const lambo_chasis = new SceneObject(gl, lambo_chasisGeometry, lamborghiniMaterial,[null], false);
   const lambo_mirror = new SceneObject(gl, lambo_mirrorGeometry, mirrorMaterial,[null], false);
-  const lambo_logo = new SceneObject(gl, lambo_logoGeometry, mirrorMaterial, [lambo_logoTexture],false);
+  const lambo_logo = new SceneObject(gl, lambo_logoGeometry, logoMaterial, [lambo_logoTexture],false);
   const lambo_ruedas = new SceneObject(gl, lambo_ruedasGeometry, wheelMaterial, [null], false);
   const lambo_llantas = new SceneObject(gl, lambo_llantasGeometry, rimMaterial, [null], false);
   const lambo_plastic = new SceneObject(gl, lambo_plasticGeometry, wheelMaterial, [null], false);
@@ -134,10 +135,11 @@ async function main() {
   mat4.multiply(m,sm,m);
 
   //Creo las luces de la escena.
-  const light = new SceneLight([0,5,0,1],[1,1,1],Math.cos(toRadians(50)),[0,-1,0,0],1);
-  const light2 = new SceneLight([0,5,10,1],[0.8,0.1,0.1],Math.cos(toRadians(50)),[0,-1,0,0],1);
-  const light3 = new SceneLight([0,5,-10,1],[0.1,0.8,0.1],Math.cos(toRadians(50)),[0,-1,0,0],1);
+  const light = new SceneLight([0,5,0,1],[1,1,1],Math.cos(toRadians(50)),[0,-1,0,0],1); //En el Shader siempre es una luz puntual...
+  const light2 = new SceneLight([0,5,10,1],[1,1,1],Math.cos(toRadians(50)),[0,1,0,0],2);
+  const light3 = new SceneLight([0,5,-10,1],[1,0.1,0.1],Math.cos(toRadians(50)),[0,-1,0,0],1);
   const sceneLights = [light];
+  console.log(light.type);
   var SHADOW_MAP_SIZE = 4096
 
   /*FUNCIONAMIENTO SOMBRAS GLOBALES CON CUBEMAPS
@@ -212,64 +214,64 @@ var last =0;
   }
 
 
-
-  function drawSceneAsUsual() {
-      // Enlazamos el Frame Buffer conectado al canvas (desenlazando el actual), y lo configuramos
-      //gl.bindFramebuffer(gl.FRAMEBUFFER, null)
-      gl.clearColor(0.05, 0.05, 0.05, 1)
-      gl.enable(gl.BLEND);
-		  gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-      // Actualizamos vista en caso de cambios en el tamaño del canvas (e.g. por cambios en tamaño de la ventana)
-      updateView(gl, canvas, camera, true)
-      // Limpiamos buffers de color y profundidad del canvas antes de empezar a dibujar los objetos de la escena
-      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-      for(let object of sceneObjects){
-        mat4.multiply(object.modelViewMatrix, camera.viewMatrix, object.modelMatrix);
-        mat4.invert(object.normalMatrix, object.modelViewMatrix);
-        mat4.transpose(object.normalMatrix, object.normalMatrix);
-        // Seteamos programa a usar
-        let programa = object.material.program;
-        programa.use()
-        // Actualizamos uniforms que sea necesario
-        programa.setUniformValue("viewMatrix", camera.viewMatrix)
-        programa.setUniformValue("projectionMatrix", camera.projectionMatrix)
-        programa.setUniformValue("modelMatrix", object.modelMatrix)
-        programa.setUniformValue("normalMatrix", object.normalMatrix);
-        programa.setUniformValue("MV",object.modelViewMatrix);
-        for (let name in object.material.properties) {
-				const value = object.material.properties[name];
-				programa.setUniformValue(name, value);
-			}
-        if(object.material.affectedByLight){
-          let i=0;
-          for(let light of sceneLights){
-            let lightPosEye = vec4.create();
-            let lightDirEye = vec4.create();
-            vec4.transformMat4(lightPosEye, light.position, camera.viewMatrix);
-            vec4.transformMat4(lightDirEye, light.direction, camera.viewMatrix);
-            programa.setUniformValue("lights["+i+"].posL", lightPosEye);
-            programa.setUniformValue("lights["+i+"].ia", light.color);
-            programa.setUniformValue("lights["+i+"].dirL", lightDirEye);
-            programa.setUniformValue("lights["+i+"].limit", light.angle);
-            programa.setUniformValue("lights["+i+"].type", light.type);
-            i++;
-          }
-          programa.setUniformValue("cantLights",i);
-        }
-        // Seteamos unidad de textura activa, junto con su target (TEXTURE_2D) y la textura a usar (donde tenemos la escena renderizada)
-        let j=0;
-        for(let texture of object.textures){
-          gl.activeTexture(gl.TEXTURE1 + j)
-          gl.bindTexture(gl.TEXTURE_2D, texture);
-          j++;
-        }
-        // Seteamos info de geometria a usar
-        object.vertexArray.bind()
-        // Dibujamos
-        gl.drawElements(object.drawMode, object.indexBuffer.size, object.indexBuffer.dataType, 0)
-      }
-
-  }
+  //
+  // function drawSceneAsUsual() {
+  //     // Enlazamos el Frame Buffer conectado al canvas (desenlazando el actual), y lo configuramos
+  //     //gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+  //     gl.clearColor(0.05, 0.05, 0.05, 1)
+  //     gl.enable(gl.BLEND);
+	// 	  gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+  //     // Actualizamos vista en caso de cambios en el tamaño del canvas (e.g. por cambios en tamaño de la ventana)
+  //     updateView(gl, canvas, camera, true)
+  //     // Limpiamos buffers de color y profundidad del canvas antes de empezar a dibujar los objetos de la escena
+  //     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+  //     for(let object of sceneObjects){
+  //       mat4.multiply(object.modelViewMatrix, camera.viewMatrix, object.modelMatrix);
+  //       mat4.invert(object.normalMatrix, object.modelViewMatrix);
+  //       mat4.transpose(object.normalMatrix, object.normalMatrix);
+  //       // Seteamos programa a usar
+  //       let programa = object.material.program;
+  //       programa.use()
+  //       // Actualizamos uniforms que sea necesario
+  //       programa.setUniformValue("viewMatrix", camera.viewMatrix)
+  //       programa.setUniformValue("projectionMatrix", camera.projectionMatrix)
+  //       programa.setUniformValue("modelMatrix", object.modelMatrix)
+  //       programa.setUniformValue("normalMatrix", object.normalMatrix);
+  //       programa.setUniformValue("MV",object.modelViewMatrix);
+  //       for (let name in object.material.properties) {
+	// 			const value = object.material.properties[name];
+	// 			programa.setUniformValue(name, value);
+	// 		}
+  //       if(object.material.affectedByLight){
+  //         let i=0;
+  //         for(let light of sceneLights){
+  //           let lightPosEye = vec4.create();
+  //           let lightDirEye = vec4.create();
+  //           vec4.transformMat4(lightPosEye, light.position, camera.viewMatrix);
+  //           vec4.transformMat4(lightDirEye, light.direction, camera.viewMatrix);
+  //           programa.setUniformValue("lights["+i+"].posL", lightPosEye);
+  //           programa.setUniformValue("lights["+i+"].ia", light.color);
+  //           programa.setUniformValue("lights["+i+"].dirL", lightDirEye);
+  //           programa.setUniformValue("lights["+i+"].limit", light.angle);
+  //           programa.setUniformValue("lights["+i+"].type", light.type);
+  //           i++;
+  //         }
+  //         programa.setUniformValue("cantLights",i);
+  //       }
+  //       // Seteamos unidad de textura activa, junto con su target (TEXTURE_2D) y la textura a usar (donde tenemos la escena renderizada)
+  //       let j=0;
+  //       for(let texture of object.textures){
+  //         gl.activeTexture(gl.TEXTURE1 + j)
+  //         gl.bindTexture(gl.TEXTURE_2D, texture);
+  //         j++;
+  //       }
+  //       // Seteamos info de geometria a usar
+  //       object.vertexArray.bind()
+  //       // Dibujamos
+  //       gl.drawElements(object.drawMode, object.indexBuffer.size, object.indexBuffer.dataType, 0)
+  //     }
+  //
+  // }
   /*Funcion que dibuja la escena usando el shadowMap calculado previamente*/
   function drawShadowMap(){
     gl.enable(gl.CULL_FACE);
@@ -318,6 +320,13 @@ var last =0;
         }
         programa.setUniformValue("cantLights",i);
 
+      }
+      // Seteamos unidad de textura activa, junto con su target (TEXTURE_2D) y la textura a usar (donde tenemos la escena renderizada)
+      let j=0;
+      for(let texture of object.textures){
+        gl.activeTexture(gl.TEXTURE1 + j)
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        j++;
       }
       object.vertexArray.bind();
       gl.drawElements(object.drawMode, object.indexBuffer.size, object.indexBuffer.dataType, 0);
