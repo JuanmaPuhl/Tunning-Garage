@@ -136,9 +136,12 @@ async function main() {
 
   //Creo las luces de la escena.
   const light = new SceneLight([0,5,0,1],[1,1,1],Math.cos(toRadians(50)),[0,-1,0,0],1); //En el Shader siempre es una luz puntual...
-  const light2 = new SceneLight([0,5,10,1],[1,1,1],Math.cos(toRadians(50)),[0,1,0,0],2);
-  const light3 = new SceneLight([0,5,-10,1],[1,0.1,0.1],Math.cos(toRadians(50)),[0,-1,0,0],1);
+  const light2 = new SceneLight([0,5,0,1],[1,0.1,0.1],Math.cos(toRadians(50)),[0,-1,0,0],0);
+  const light3 = new SceneLight([0,5,-10,1],[1,0.1,0.1],Math.cos(toRadians(50)),[-1,0,0,0],2);
+
   const sceneLights = [light];
+
+
   console.log(light.type);
   var SHADOW_MAP_SIZE = 4096
 
@@ -184,11 +187,13 @@ async function main() {
      var shadowMapProj = mat4.create();
      var shadowClipNearFar = [0.1,50.0];
      mat4.perspective(shadowMapProj,toRadians(90),1,shadowClipNearFar[0],shadowClipNearFar[1]);
-  generateShadowMap();
+  generateShadowMap(light);
   // 🎬 Iniciamos el render-loop
 var then=0;
 var count =0;
 var last =0;
+var bias = document.getElementById("lamborghini-rotation");
+
 
 
   requestAnimationFrame(render)
@@ -274,8 +279,8 @@ var last =0;
   // }
   /*Funcion que dibuja la escena usando el shadowMap calculado previamente*/
   function drawShadowMap(){
-    gl.enable(gl.CULL_FACE);
-    gl.enable(gl.DEPTH_TEST);
+    //gl.enable(gl.CULL_FACE);
+    //gl.enable(gl.DEPTH_TEST);
     gl.clearColor(0,0,0,1);
     gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
     gl.enable(gl.BLEND);
@@ -300,6 +305,7 @@ var last =0;
       programa.setUniformValue("modelMatrix",object.modelMatrix);
       programa.setUniformValue("MV",object.modelViewMatrix);
       programa.setUniformValue("normalMatrix",object.normalMatrix);
+      //programa.setUniformValue("bias",parseFloat(bias.value));
       for (let name in object.material.properties) {
         const value = object.material.properties[name];
         programa.setUniformValue(name, value);
@@ -348,12 +354,14 @@ var last =0;
 
   function setTextureConfig() {
   gl.bindTexture(gl.TEXTURE_CUBE_MAP, shadowMapCube);
-  gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.REPEAT);
-  gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.REPEAT);
+  gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE);
+
   for (let i = 0; i < 6; i++) {
-    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, gl.RGBA, SHADOW_MAP_SIZE, SHADOW_MAP_SIZE, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, 0,  gl.RGBA, SHADOW_MAP_SIZE, SHADOW_MAP_SIZE, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
   }
   //Creo los framebuffer que almacenan la textura.
   shadowMapFrameBuffer = gl.createFramebuffer();
@@ -365,24 +373,22 @@ var last =0;
   gl.bindRenderbuffer(gl.RENDERBUFFER, null);
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 }
-  function generateShadowMap() {
+  function generateShadowMap(luz) {
   		shadowProgram.use(); //Seteo el programa a usar
   		// gl.activeTexture(gl.TEXTURE0);
   		gl.bindTexture(gl.TEXTURE_CUBE_MAP, shadowMapCube); //Bindeo texturas y buffers
   		gl.bindFramebuffer(gl.FRAMEBUFFER, shadowMapFrameBuffer);
   		gl.bindRenderbuffer(gl.RENDERBUFFER, shadowMapRenderBuffer);
       gl.viewport(0, 0, SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);//Hago viewport para que dibuje texturas del tamaÃ±o deseado
-      gl.enable(gl.DEPTH_TEST);
-      gl.enable(gl.CULL_FACE);
   		//Paso uniforms
   		shadowProgram.setUniformValue("shadowClipNearFar", shadowClipNearFar);
-  		shadowProgram.setUniformValue("pointLightPosition", light.position);
+  		shadowProgram.setUniformValue("pointLightPosition", luz.position);
   		shadowProgram.setUniformValue("mProj", shadowMapProj);
   		for (let i = 0; i < 6; i++) {//Para cada cara del cubemap...
   			let lookAt = vec3.create();
   			let matriz = mat4.create();
-  			vec3.add(lookAt, light.position, ENV_CUBE_LOOK_DIR[i]); //Calculo el centro al cual mirar
-  			mat4.lookAt(matriz, light.position, lookAt, ENV_CUBE_LOOK_UP[i]); //Miro a la direccion necesaria
+  			vec3.add(lookAt, luz.position, ENV_CUBE_LOOK_DIR[i]); //Calculo el centro al cual mirar
+  			mat4.lookAt(matriz, luz.position, lookAt, ENV_CUBE_LOOK_UP[i]); //Miro a la direccion necesaria
   			shadowProgram.setUniformValue("mView", matriz);
   			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, shadowMapCube, 0);
   			gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, shadowMapRenderBuffer);
