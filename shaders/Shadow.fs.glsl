@@ -53,7 +53,7 @@ float calcSombras(Light light,vec3 N, vec3 V){
   float fromLightToFrag = (length(fPos - pointLightPosition.xyz)-shadowClipNearFar.x)/(shadowClipNearFar.y-shadowClipNearFar.x);
   float shadowMapValue;
   int samples = 20;
-  float lightIntensity = 0.3;
+  float lightIntensity = 0.3 * float(samples);
   float bias = max(0.05 * (1.0 - dif), 0.003);
   float ringSize = 0.001;
   for(int i = 0; i < samples; ++i){
@@ -63,6 +63,11 @@ float calcSombras(Light light,vec3 N, vec3 V){
     }
   }
   lightIntensity /= float(samples);
+  // shadowMapValue = texture(lightShadowMap,-toLightNormal).r;
+  // if((shadowMapValue + bias)>= fromLightToFrag){
+  //   lightIntensity += 1.0 * dif;
+  // }
+
   toReturn = lightIntensity;
   return toReturn;
 }
