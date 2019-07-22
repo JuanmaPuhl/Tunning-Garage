@@ -3,6 +3,7 @@ import { getFileContentsAsText, toRadians , loadImage} from "/libs/utils.js"
 import { Program, VertexBuffer, IndexBuffer, VertexArray, SphericalCamera, SphericalCameraMouseControls, Material,SceneObject,Geometry ,SceneLight} from "/libs/gl-engine/index.js"
 import { parse } from "/libs/gl-engine/parsers/obj-parser.js"
 
+var pcf=1;
 main()
 
 async function main() {
@@ -193,8 +194,14 @@ var then=0;
 var count =0;
 var last =0;
 var bias = document.getElementById("lamborghini-rotation");
-
-
+var btnPCF = document.getElementById("PCF");
+btnPCF.addEventListener("click", () => {
+	if(pcf)
+    pcf = 0;
+  else
+    pcf = 1;
+  console.log(pcf);
+	});
 
   requestAnimationFrame(render)
 
@@ -305,7 +312,7 @@ var bias = document.getElementById("lamborghini-rotation");
       programa.setUniformValue("modelMatrix",object.modelMatrix);
       programa.setUniformValue("MV",object.modelViewMatrix);
       programa.setUniformValue("normalMatrix",object.normalMatrix);
-      //programa.setUniformValue("bias",parseFloat(bias.value));
+      programa.setUniformValue("pcf", pcf);
       for (let name in object.material.properties) {
         const value = object.material.properties[name];
         programa.setUniformValue(name, value);
@@ -409,6 +416,8 @@ var bias = document.getElementById("lamborghini-rotation");
   		gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
   	}
 }
+
+
 
 function updateView(gl, canvas, camera, forceUpdate = false) {
     // Obtenemos el tamaño en pantalla del canvas

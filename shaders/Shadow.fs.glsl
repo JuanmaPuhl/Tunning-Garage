@@ -33,7 +33,7 @@ uniform float p;
 uniform float sigma;
 vec3 coefDifuso;
 uniform vec3 b;
-
+uniform int pcf;
 vec3 sampleOffsetDirections[20] = vec3[]
 (
    vec3( 1,  1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1,  1,  1),
@@ -43,6 +43,7 @@ vec3 sampleOffsetDirections[20] = vec3[]
    vec3( 0,  1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0,  1, -1)
 );
 
+/*Este metodo calcula las sombras para una determinada luz. Requiere un cubemap de profundidad.*/
 float calcSombras(Light light,vec3 N, vec3 V){
   vec3 vLE = light.position.xyz + vVE;
   vec3 L = normalize(vLE);
@@ -53,21 +54,30 @@ float calcSombras(Light light,vec3 N, vec3 V){
   float fromLightToFrag = (length(fPos - pointLightPosition.xyz)-shadowClipNearFar.x)/(shadowClipNearFar.y-shadowClipNearFar.x);
   float shadowMapValue;
   int samples = 20;
-  float lightIntensity = 0.3 * float(samples);
+  /*Uso multiplicaciones con el valor de pcf para prescindir del uso de if's,
+  los cuales ralentizan el programa*/
+  samples *= pcf;
+  float lightIntensity =(1.0-float(pcf))*0.3 + 0.3 * float(samples);
   float bias = max(0.05 * (1.0 - dif), 0.003);
   float ringSize = 0.001;
+  //Esta primera pasada es obligatoria.
+  shadowMapValue = texture(lightShadowMap,-toLightNormal).r;
+  if((shadowMapValue + bias)>= fromLightToFrag){
+    lightIntensity += 1.0 * dif;
+  }
+  /*Luego calculo el PCF. Para que sea optativo, se puede usar un multiplicador
+  en el samples. Por ejemplo x, si x = 0, x * samples = 0, por lo que el bucle
+  no se ejecuta, si x es 1, se ejecuta samples veces.
+  Los valores iniciales de lightIntensity tambien deben modificarse para Activar
+  o desactivar el pcf.
+  */
   for(int i = 0; i < samples; ++i){
     shadowMapValue = texture(lightShadowMap,-toLightNormal + sampleOffsetDirections[i]*ringSize).r;
     if((shadowMapValue + bias)>= fromLightToFrag){
       lightIntensity += 1.0 * dif;
     }
   }
-  lightIntensity /= float(samples);
-  // shadowMapValue = texture(lightShadowMap,-toLightNormal).r;
-  // if((shadowMapValue + bias)>= fromLightToFrag){
-  //   lightIntensity += 1.0 * dif;
-  // }
-
+  lightIntensity /= (float(samples)+ (1.0-float(pcf))); //Tengo que añadir la ultima parte o sino divide por cero.
   toReturn = lightIntensity;
   return toReturn;
 }
