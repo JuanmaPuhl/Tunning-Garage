@@ -23,7 +23,7 @@ uniform float rugosidad;
 uniform float p;
 uniform float sigma;
 uniform int pcf;
-uniform float b;
+uniform vec3 b;
 /*----------------------------------------------------------------------------*/
 vec3 coefDifuso;
 vec3 sampleOffsetDirections[20] = vec3[]
@@ -139,9 +139,9 @@ vec3 calcularAportePuntual(Light l, vec3 N , vec3 V){
   float value = orenNayar(N,V,L,H);
 
   if(componente1*componente2!=0.0)
-    return ia*(coefDifuso*value + ks*(Fres/3.141516)* (Beckmann*GCT)/(componente1*componente2));
+    return coefAmb+ia*(coefDifuso*value + ks*(Fres/3.141516)* (Beckmann*GCT)/(componente1*componente2));
   else
-     return ia*coefDifuso*value;
+     return coefAmb+ia*coefDifuso*value;
 }
 
 vec3 calcularAporteSpot(Light l, vec3 N, vec3 V){
@@ -187,9 +187,9 @@ vec3 calcularAporteSpot(Light l, vec3 N, vec3 V){
 
     float value = orenNayar(N,V,L,H);
     if(componente1*componente2!=0.0)
-      toReturn = ia*(inlight * coefDifuso*value + inlight * ks*(Fres/3.141516)* (Beckmann*GCT)/(componente1*componente2));
+      toReturn = coefAmb+ia*(inlight * coefDifuso*value + inlight * ks*(Fres/3.141516)* (Beckmann*GCT)/(componente1*componente2));
     else
-       toReturn = ia*inlight*coefDifuso * value;
+       toReturn = coefAmb+ia*inlight*coefDifuso * value;
     return toReturn;
 }
 
@@ -234,16 +234,16 @@ vec3 calcularAporteDireccional(Light l, vec3 N , vec3 V){
 
   float value = orenNayar(N,V,S,H);
   if(componente1*componente2!=0.0)
-    return ia*(coefDifuso*value + ks*(Fres/3.141516)* (Beckmann*GCT)/(componente1*componente2));
+    return coefAmb+ia*(coefDifuso*value + ks*(Fres/3.141516)* (Beckmann*GCT)/(componente1*componente2));
   else
-     return ia*coefDifuso * value;
+     return coefAmb+ia*coefDifuso * value;
 }
 
 
 void main(){
   vec3 N = normalize(vNE);
   vec3 V = normalize(vVE);
-  coefAmb =b * texture(texture0,fTexCoor).xyz;
+  coefAmb =0.25* b * texture(texture0,fTexCoor).xyz;
   coefDifuso = kd + texture(texture0,fTexCoor).xyz  ;
   float shadowValue = calcSombras(lights[0],N,V);
   vec3 ret =shadowValue*calcularAportePuntual(lights[0],N,V);

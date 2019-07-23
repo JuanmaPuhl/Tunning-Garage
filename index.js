@@ -93,7 +93,7 @@ async function main() {
   const mirrorMaterial = new Material(sProgram, true,true,{texture0:1,texture2:2,normalsTexture: 3,ka:[0,0,0],kd:[0,0,0], ks:[1,1,1], F0: 0.1, rugosidad: 0.09, sigma:0, p:100,b:[0,0,0]});
   const wheelMaterial = new Material(sProgram, true,true, {texture0:1,texture2:2,normalsTexture: 3, ka:[0,0,0],kd:[0.26,0.26,0.26], ks:[0,0,0], F0:0.09, rugosidad:0.1, sigma:90, p:1,b:[0,0,0]});
   const rimMaterial = new Material(sProgram, true,true, {texture0:1,texture2:2, normalsTexture: 3,ka:[0.05,0.05,0.05],kd:[0.6019,0.6019,0.6019], ks:[0.37058,0.37058,0.37058], F0: 0.13, rugosidad: 0.1, sigma: 0, p:2,b:[0,0,0]});
-  const logoMaterial = new Material(sProgram, true, true, {texture0:1, texture2:2, normalsTexture: 3, ka:[0,0,0], kd:[0.6,0.6,0.6], ks:[0.0,0.0,0.0], F0:0.1, rugosidad: 0.09, sigma: 90, p:0.1,b:[0,0,0]});
+  const logoMaterial = new Material(sProgram, true, true, {texture0:1, texture2:2, normalsTexture: 3, ka:[0,0,0], kd:[0.6,0.6,0.6], ks:[0.1,0.1,0.1], F0:0.1, rugosidad: 0.09, sigma: 0.5, p:0.1,b:[1,1,1]});
 
   // const floorMaterial = new Material(cookTorranceProgram, true,true, {texture0:1,texture2:2,normalsTexture: 3, ka:[0.2,0.2,0.2], kd:[0.85446,0.85446,0.85446],ks:[0.0,0.0,0.0],F0:2.81, rugosidad:0.3, sigma:90, p:1});
   // const lamborghiniMaterial = new Material(cookTorranceProgram,true,true,{texture0:1,texture2:2,normalsTexture: 3,ka:[0.2,0.2,0], kd: [0.4,0.4,0], ks:[1,1,0], F0: 0.13, rugosidad: 0.3, sigma: 90, p:1});
