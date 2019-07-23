@@ -59,7 +59,8 @@ float calcSombras(Light light,vec3 N, vec3 V){
   samples *= pcf;
   float lightIntensity =(1.0-float(pcf))*0.3 + 0.3 * float(samples);
   //float lightIntensity = 0.0;
-  float bias = max(0.05 * (1.0 - dif), 0.003);
+  // float bias = max(0.05 * (1.0 - dif), 0.0001);
+  float bias = 0.001;
   float ringSize = 0.001;
   //Esta primera pasada es obligatoria.
   shadowMapValue = texture(lightShadowMap,-toLightNormal).r;

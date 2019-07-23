@@ -142,7 +142,11 @@ async function main() {
 
   const sceneLights = [light];
 
-
+  const ext = gl.getExtension("EXT_color_buffer_float");
+  	if (!ext) {
+  		alert("need EXT_color_buffer_float");
+  		return;
+  	}
   console.log(light.type);
   var SHADOW_MAP_SIZE = 4096
 
@@ -186,7 +190,7 @@ async function main() {
 
      //Creo la matriz de proyeccion de la camara en la posicion de la luz
      var shadowMapProj = mat4.create();
-     var shadowClipNearFar = [0.1,8];
+     var shadowClipNearFar = [0.1,50];
      mat4.perspective(shadowMapProj,toRadians(90),1,shadowClipNearFar[0],shadowClipNearFar[1]);
   generateShadowMap(light);
   // 🎬 Iniciamos el render-loop
@@ -368,7 +372,7 @@ btnPCF.addEventListener("click", () => {
   gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE);
 
   for (let i = 0; i < 6; i++) {
-    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, 0,  gl.RGBA, SHADOW_MAP_SIZE, SHADOW_MAP_SIZE, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, 0,  gl.RGBA32F, SHADOW_MAP_SIZE, SHADOW_MAP_SIZE, 0, gl.RGBA, gl.FLOAT, null);
   }
   //Creo los framebuffer que almacenan la textura.
   shadowMapFrameBuffer = gl.createFramebuffer();
