@@ -94,7 +94,7 @@ async function main() {
   const glassMaterial = new Material(glassProgram, true,false,{texture0:0,kd: [0.1,0.1,0.1], ks:[1,1,1], a: 0.01});
   const glassMaterial2 = new Material(glassProgram, true,false,{texture0:0,kd: [0.1,0.1,0.1], ks:[1,1,1],a : 0.01});
   const mirrorMaterial = new Material(sProgram, true,true,{texture0:1,texture2:2,normalsTexture: 3,ka:[0,0,0],kd:[0,0,0], ks:[1,1,1], F0: 0.1, rugosidad: 0.09, sigma:0, p:100,b:[0,0,0]});
-  const wheelMaterial = new Material(sProgram, true,true, {texture0:1,texture2:2,normalsTexture: 3, ka:[0,0,0],kd:[0.26,0.26,0.26], ks:[0,0,0], F0:0.09, rugosidad:0.1, sigma:90, p:0.2,b:[0,0,0]});
+  const wheelMaterial = new Material(sProgram, true,true, {texture0:1,texture2:2,normalsTexture: 3, ka:[0,0,0],kd:[0.26,0.26,0.26], ks:[0,0,0], F0:0.09, rugosidad:0.1, sigma:90, p:1,b:[0,0,0]});
   const rimMaterial = new Material(sProgram, true,true, {texture0:1,texture2:2, normalsTexture: 3,ka:[0.05,0.05,0.05],kd:[0.6019,0.6019,0.6019], ks:[0.37058,0.37058,0.37058], F0: 0.13, rugosidad: 0.1, sigma: 0, p:2,b:[0,0,0]});
   const logoMaterial = new Material(sProgram, true, true, {texture0:1, texture2:2, normalsTexture: 3, ka:[0,0,0], kd:[0.6,0.6,0.6], ks:[0.0,0.0,0.0], F0:0.1, rugosidad: 0.09, sigma: 90, p:0.1,b:[0,0,0]});
 
@@ -136,8 +136,8 @@ async function main() {
   mat4.multiply(m,sm,m);
 
   //Creo las luces de la escena.
-  const light = new SceneLight([0,5,0,1],[1,1,1],Math.cos(toRadians(50)),[0,-1,0,0],1); //En el Shader siempre es una luz puntual...
-  const light2 = new SceneLight([0,5,0,1],[1,0.1,0.1],Math.cos(toRadians(50)),[0,-1,0,0],0);
+  const light = new SceneLight([0,5,0,1],[1, 1,1],Math.cos(toRadians(50)),[0,-1,0,0],1); //En el Shader siempre es una luz puntual...
+  const light2 = new SceneLight([0,5,10,1],[1,1,1],Math.cos(toRadians(50)),[0,-1,0,0],1);
   const light3 = new SceneLight([0,5,-10,1],[1,0.1,0.1],Math.cos(toRadians(50)),[-1,0,0,0],2);
 
   const sceneLights = [light];
@@ -186,7 +186,7 @@ async function main() {
 
      //Creo la matriz de proyeccion de la camara en la posicion de la luz
      var shadowMapProj = mat4.create();
-     var shadowClipNearFar = [0.1,50.0];
+     var shadowClipNearFar = [0.1,8];
      mat4.perspective(shadowMapProj,toRadians(90),1,shadowClipNearFar[0],shadowClipNearFar[1]);
   generateShadowMap(light);
   // 🎬 Iniciamos el render-loop

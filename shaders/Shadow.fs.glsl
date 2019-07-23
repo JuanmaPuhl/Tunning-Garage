@@ -1,11 +1,11 @@
 #version 300 es
-precision mediump float;
+precision highp float;
 #define PI 3.1415926535897932384626433832795
+/*----------------------------------------------------------------------------*/
 uniform vec4 pointLightPosition;
 uniform vec3 ka;
 uniform vec3 kd;
 uniform vec3 ks;
-
 uniform samplerCube lightShadowMap;
 uniform vec2 shadowClipNearFar;
 uniform mat4 viewMatrix;
@@ -17,23 +17,15 @@ uniform struct Light{
   int type;
 }lights[20];
 uniform int cantLights;
-
 uniform sampler2D texture0;
-uniform float bias;
-in vec3 fPos;
-in vec3 fNorm;
-in vec3 vNE;
-in vec3 vVE;
-in vec2 fTexCoor;
-out vec4 fragColor;
-
 uniform float F0;
 uniform float rugosidad;
 uniform float p;
 uniform float sigma;
-vec3 coefDifuso;
-uniform vec3 b;
 uniform int pcf;
+uniform float b;
+/*----------------------------------------------------------------------------*/
+vec3 coefDifuso;
 vec3 sampleOffsetDirections[20] = vec3[]
 (
    vec3( 1,  1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1,  1,  1),
@@ -42,6 +34,14 @@ vec3 sampleOffsetDirections[20] = vec3[]
    vec3( 1,  0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1,  0, -1),
    vec3( 0,  1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0,  1, -1)
 );
+vec3 coefAmb;
+/*----------------------------------------------------------------------------*/
+in vec3 fPos;
+in vec3 fNorm;
+in vec3 vNE;
+in vec3 vVE;
+in vec2 fTexCoor;
+out vec4 fragColor;
 
 /*Este metodo calcula las sombras para una determinada luz. Requiere un cubemap de profundidad.*/
 float calcSombras(Light light,vec3 N, vec3 V){
@@ -58,12 +58,13 @@ float calcSombras(Light light,vec3 N, vec3 V){
   los cuales ralentizan el programa*/
   samples *= pcf;
   float lightIntensity =(1.0-float(pcf))*0.3 + 0.3 * float(samples);
+  //float lightIntensity = 0.0;
   float bias = max(0.05 * (1.0 - dif), 0.003);
   float ringSize = 0.001;
   //Esta primera pasada es obligatoria.
   shadowMapValue = texture(lightShadowMap,-toLightNormal).r;
-  if((shadowMapValue + bias)>= fromLightToFrag){
-    lightIntensity += 1.0 * dif;
+  if((shadowMapValue + bias)> fromLightToFrag){
+    lightIntensity += 1.0  ;
   }
   /*Luego calculo el PCF. Para que sea optativo, se puede usar un multiplicador
   en el samples. Por ejemplo x, si x = 0, x * samples = 0, por lo que el bucle
@@ -73,8 +74,8 @@ float calcSombras(Light light,vec3 N, vec3 V){
   */
   for(int i = 0; i < samples; ++i){
     shadowMapValue = texture(lightShadowMap,-toLightNormal + sampleOffsetDirections[i]*ringSize).r;
-    if((shadowMapValue + bias)>= fromLightToFrag){
-      lightIntensity += 1.0 * dif;
+    if((shadowMapValue + bias)> fromLightToFrag){
+      lightIntensity += 1.0  ;
     }
   }
   lightIntensity /= (float(samples)+ (1.0-float(pcf))); //Tengo que añadir la ultima parte o sino divide por cero.
@@ -137,9 +138,9 @@ vec3 calcularAportePuntual(Light l, vec3 N , vec3 V){
   float value = orenNayar(N,V,L,H);
 
   if(componente1*componente2!=0.0)
-    return b+ia*(coefDifuso*value + ks*(Fres/3.141516)* (Beckmann*GCT)/(componente1*componente2));
+    return ia*(coefDifuso*value + ks*(Fres/3.141516)* (Beckmann*GCT)/(componente1*componente2));
   else
-     return b+ia*coefDifuso*value;
+     return ia*coefDifuso*value;
 }
 
 vec3 calcularAporteSpot(Light l, vec3 N, vec3 V){
@@ -185,9 +186,9 @@ vec3 calcularAporteSpot(Light l, vec3 N, vec3 V){
 
     float value = orenNayar(N,V,L,H);
     if(componente1*componente2!=0.0)
-      toReturn = b+ia*(inlight * coefDifuso*value + inlight * ks*(Fres/3.141516)* (Beckmann*GCT)/(componente1*componente2));
+      toReturn = ia*(inlight * coefDifuso*value + inlight * ks*(Fres/3.141516)* (Beckmann*GCT)/(componente1*componente2));
     else
-       toReturn = b+ia*inlight*coefDifuso * value;
+       toReturn = ia*inlight*coefDifuso * value;
     return toReturn;
 }
 
@@ -232,26 +233,28 @@ vec3 calcularAporteDireccional(Light l, vec3 N , vec3 V){
 
   float value = orenNayar(N,V,S,H);
   if(componente1*componente2!=0.0)
-    return b+ia*(coefDifuso*value + ks*(Fres/3.141516)* (Beckmann*GCT)/(componente1*componente2));
+    return ia*(coefDifuso*value + ks*(Fres/3.141516)* (Beckmann*GCT)/(componente1*componente2));
   else
-     return b+ia*coefDifuso * value;
+     return ia*coefDifuso * value;
 }
 
 
 void main(){
   vec3 N = normalize(vNE);
   vec3 V = normalize(vVE);
+  coefAmb =b * texture(texture0,fTexCoor).xyz;
   coefDifuso = kd + texture(texture0,fTexCoor).xyz  ;
-  vec3 ret = calcularAportePuntual(lights[0],N,V);
-  vec3 col =ret;
+  float shadowValue = calcSombras(lights[0],N,V);
+  vec3 ret =shadowValue*calcularAportePuntual(lights[0],N,V);
+
   for(int i = 1; i<cantLights; i++){
     if(lights[i].type==0)
-     col += calcularAporteSpot(lights[i],N,V);
+     ret += calcularAporteSpot(lights[i],N,V);
     if(lights[i].type==1)
-      col += calcularAportePuntual(lights[i],N,V);
+      ret += calcularAportePuntual(lights[i],N,V);
     if(lights[i].type==2)
-     col += calcularAporteDireccional(lights[i],N,V);
+     ret += calcularAporteDireccional(lights[i],N,V);
   }
-  fragColor = vec4((calcSombras(lights[0],N,V))*col,1.0);
+  fragColor = vec4(ret,1.0);
 
 }
