@@ -18,9 +18,11 @@ async function main() {
   console.log("CARGANDO TEXTURAS");
   const lambo_logoTexture = gl.createTexture();
   const lambo_engineTexture = gl.createTexture();
+  const lambo_brakeTexture = gl.createTexture();
 
   armarTextura(lambo_logoTexture, await loadImage("/textures/logo_lamborghini.jpeg"));
   armarTextura(lambo_engineTexture, await loadImage("/textures/lp700_motor.jpeg"));
+  armarTextura(lambo_brakeTexture, await loadImage("/textures/lp700_frein.jpeg"));
   console.log("CARGANDO MODELOS");
   //const lamborghiniGeometryData = await parse("models/lambo.obj", true)
   const cubeGeometryData   = await parse("models/cube.obj", false)
@@ -36,6 +38,8 @@ async function main() {
   const lambo_engineGeometryData = await parse("models/Lambo_engine.obj",true);
   const lambo_wordGeometryData = await parse("models/Lambo_word.obj", true);
   const lambo_exhaustGeometryData = await parse("models/Lambo_exhaust.obj", true);
+  const lambo_brakeGeometryData = await parse("models/Lambo_brake.obj", true);
+  const lambo_brake_diskGeometryData = await parse("models/Lambo_brake_disk.obj", true);
 
   console.log("CARGANDO SHADERS");
   const normalsVertexShaderSource   = await getFileContentsAsText("shaders/normals.vert.glsl")
@@ -66,6 +70,8 @@ async function main() {
   const lambo_engineGeometry = new Geometry(gl, lambo_engineGeometryData);
   const lambo_wordGeometry = new Geometry(gl, lambo_wordGeometryData);
   const lambo_exhaustGeometry = new Geometry(gl, lambo_exhaustGeometryData);
+  const lambo_brakeGeometry = new Geometry(gl, lambo_brakeGeometryData);
+  const lambo_brake_diskGeometry = new Geometry(gl, lambo_brake_diskGeometryData);
   // #️⃣ Creamos la camara principal, sus controles y una camara secundaria para la escena offscreen (mas detalle en breve)
 
   const camera = new SphericalCamera(5, 30, 70)
@@ -119,8 +125,10 @@ async function main() {
   const lambo_engine = new SceneObject(gl, lambo_engineGeometry, wheelMaterial, [lambo_engineTexture], false);
   const lambo_word = new SceneObject(gl, lambo_wordGeometry, rimMaterial, [null], false);
   const lambo_exhaust = new SceneObject(gl, lambo_exhaustGeometry, rimMaterial, [null], false);
+  const lambo_brake = new SceneObject(gl, lambo_brakeGeometry, rimMaterial, [lambo_brakeTexture], false);
+  const lambo_brake_disk = new SceneObject(gl, lambo_brake_diskGeometry, rimMaterial, [null], false);
 
-  const sceneObjects = [cube,lambo_chasis,lambo_mirror, lambo_logo, lambo_ruedas, lambo_llantas, lambo_plastic, lambo_interior, lambo_engine, lambo_word, lambo_exhaust];
+  const sceneObjects = [cube,lambo_chasis,lambo_mirror, lambo_logo, lambo_ruedas, lambo_llantas, lambo_plastic, lambo_interior, lambo_engine, lambo_word, lambo_exhaust, lambo_brake, lambo_brake_disk];
   sceneObjects.push(lambo_glass);//Lo agrego siempre al final
   sceneObjects.push(lambo_glass_lights);
 
@@ -134,10 +142,10 @@ async function main() {
 
   //Creo las luces de la escena.
   const light = new SceneLight([0,5,0,1],[1, 1,1],Math.cos(toRadians(50)),[0,-1,0,0],1); //En el Shader siempre es una luz puntual...
-  const light2 = new SceneLight([0,5,10,1],[1,0.1,0.1],Math.cos(toRadians(50)),[0,-1,0,0],0);
+  const light2 = new SceneLight([0,5,10,1],[1,0.1,0.1],Math.cos(toRadians(50)),[0,-1,0,0],1);
   const light3 = new SceneLight([0,5,-10,1],[1,0.1,0.1],Math.cos(toRadians(50)),[-1,0,0,0],2);
 
-  const sceneLights = [light];
+  const sceneLights = [light , light2];
 
   const color1 = document.getElementById("color1");
   const color2 = document.getElementById("color2");
