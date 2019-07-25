@@ -24,6 +24,7 @@ uniform float p;
 uniform float sigma;
 uniform int pcf;
 uniform vec3 b;
+uniform float bias;
 /*----------------------------------------------------------------------------*/
 vec3 coefDifuso;
 vec3 sampleOffsetDirections[20] = vec3[]
@@ -60,7 +61,7 @@ float calcSombras(Light light,vec3 N, vec3 V){
   float lightIntensity =(1.0-float(pcf))*0.3 + 0.3 * float(samples);
   //float lightIntensity = 0.0;
   // float bias = max(0.05 * (1.0 - dif), 0.0001);
-  float bias = 0.001;
+  //float bias = 0.001;
   float ringSize = 0.001;
   //Esta primera pasada es obligatoria.
   shadowMapValue = texture(lightShadowMap,-toLightNormal).r;

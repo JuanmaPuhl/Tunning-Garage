@@ -183,10 +183,12 @@ async function main() {
 
   /*Obtengo la extension para guardar texturas con valores en float.
   Esto sirve para mejorar la precision a la hora de hacer shadow mapping*/
+  var type1 = gl.RGBA32F;
+  var type2 = gl.FLOAT;
   const ext = gl.getExtension("EXT_color_buffer_float");
     if (!ext) {
-      alert("need EXT_color_buffer_float");
-      return;
+      type1 = gl.RGBA;
+      type2 = gl.UNSIGNED_BYTE;
     }
 
   var SHADOW_MAP_SIZE = 4096 //Tamaño de la sombra
@@ -221,7 +223,17 @@ async function main() {
   var shadowClipNearFar = [0.1,50];
   mat4.perspective(shadowMapProj,toRadians(90),1,shadowClipNearFar[0],shadowClipNearFar[1]);
   generateShadowMap(light);
-
+  var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+  if(status == gl.FRAMEBUFFER_COMPLETE){
+    console.log("completo");
+  }
+  else {
+    console.log("incompleto");
+    type1 = gl.RGBA;
+    type2 = gl.UNSIGNED_BYTE;
+    setTextureConfig();
+    generateShadowMap(light);
+  }
   // 🎬 Iniciamos el render-loop
   var then=0;
   var count =0;
@@ -283,6 +295,13 @@ async function main() {
       programa.setUniformValue("MV",object.modelViewMatrix);
       programa.setUniformValue("normalMatrix",object.normalMatrix);
       programa.setUniformValue("pcf", pcf);
+      if(type1 == gl.RGBA32F){
+        programa.setUniformValue("bias",0.001);
+
+      }
+      else{
+        programa.setUniformValue("bias",0.003);
+      }
       for (let name in object.material.properties) {
         const value = object.material.properties[name];
         programa.setUniformValue(name, value);
@@ -346,9 +365,12 @@ async function main() {
   shadowMapRenderBuffer = gl.createRenderbuffer();
   gl.bindRenderbuffer(gl.RENDERBUFFER, shadowMapRenderBuffer);
   gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
+
   gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
   gl.bindRenderbuffer(gl.RENDERBUFFER, null);
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+
 }
   function generateShadowMap(luz) {
   		shadowProgram.use(); //Seteo el programa a usar
